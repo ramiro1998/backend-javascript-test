@@ -33,7 +33,7 @@ export class Product {
     stock: number;
 
     @Column({ type: 'timestamp', nullable: true })
-    softDeletedAt: Date;
+    softDeletedAt: Date | null;
 
     @Column({ type: 'timestamp', nullable: false })
     createdAt: Date;

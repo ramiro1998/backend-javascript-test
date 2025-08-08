@@ -1,8 +1,8 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { FilterDto } from 'src/common/dto/filter.dto';
 import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ProductsService } from './products.service';
+import { FilterDto } from '../common/dto/filter.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Products')
 @Controller('products')
