@@ -34,4 +34,10 @@ export class Product {
 
     @Column({ type: 'timestamp', nullable: true })
     softDeletedAt: Date;
+
+    @Column({ type: 'timestamp', nullable: false })
+    createdAt: Date;
+
+    @Column({ type: 'timestamp', nullable: false })
+    updatedAt: Date;
 }

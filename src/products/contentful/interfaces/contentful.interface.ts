@@ -13,6 +13,8 @@ export interface ContentfulProductFields {
 export interface ContentfulProductEntry {
     sys: {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
     };
     fields: ContentfulProductFields;
 }

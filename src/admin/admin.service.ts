@@ -1,28 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
 import { ProductsService } from 'src/products/products.service';
+import { ReportActiveDto } from './dto/report-active.dto';
+import { ReportDeletedByCategoryDto } from './dto/report-deleted-by-category.dto';
 
 @Injectable()
 export class AdminService {
 
   constructor(private productsService: ProductsService) { }
 
-  async getDeletedProductsPercentage()/* : Promise<number> */ {
-    // const totalProducts = await this.productsService.countAllProducts();
-    // const deletedProducts = await this.productsService.countDeletedProducts();
-    // return (deletedProducts / totalProducts) * 100;
+  async getDeletedProductsPercentage() {
+    const totalProducts = await this.productsService.countAllProducts();
+    const deletedProducts = await this.productsService.countDeletedProducts();
+    const percentageDeleted = (deletedProducts / totalProducts) * 100;
+    return { percentageDeleted }
   }
 
-  async getActiveProductsByPriceStatus()/* : Promise<{ withPrice: number; withoutPrice: number }> */ {
-    // const activeProductsWithPrice = await this.productsService.countActiveProductsByPrice(true);
-    // const activeProductsWithoutPrice = await this.productsService.countActiveProductsByPrice(false);
-    // const totalActiveProducts = activeProductsWithPrice + activeProductsWithoutPrice;
+  async getActiveProductsReport(filters: ReportActiveDto) {
+    return this.productsService.getActiveProductsReport(filters)
+  }
 
-    // return {
-    //   withPrice: (activeProductsWithPrice / totalActiveProducts) * 100,
-    //   withoutPrice: (activeProductsWithoutPrice / totalActiveProducts) * 100,
-    // };
+
+  async getDeletedPercentageByCategory(filters: ReportDeletedByCategoryDto) {
+    return this.productsService.getDeletedPercentageByCategoryInDateRange(filters)
   }
 
 }

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Between, In, IsNull, Not, Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { FilterDto } from 'src/common/dto/filter.dto';
+import { ReportActiveDto } from 'src/admin/dto/report-active.dto';
+import { endOfDay, startOfDay } from 'date-fns';
+import { ReportDeletedByCategoryDto } from 'src/admin/dto/report-deleted-by-category.dto';
 
 @Injectable()
 export class ProductsService {
@@ -44,11 +45,33 @@ export class ProductsService {
     }
   }
 
-  async softDeleteMany(ids: string[]): Promise<void> {
-    await this.productsRepository.update(
-      { id: In(ids) },
-      { softDeletedAt: new Date() },
-    );
+  async softDeleteMany(ids: string[]): Promise<{ deletedIds: string[]; notFoundIds: string[]; alreadyDeletedIds: string[] }> {
+
+    const products = await this.productsRepository.find({
+      where: {
+        id: In(ids),
+      },
+    });
+
+    const foundIds = products.map(p => p.id);
+    const notFoundIds = ids.filter(id => !foundIds.includes(id));
+
+    const productsToDelete = products.filter(p => p.softDeletedAt === null);
+    const alreadyDeletedIds = products.filter(p => p.softDeletedAt !== null).map(p => p.id);
+
+    if (productsToDelete.length > 0) {
+      await this.productsRepository.update(
+        { id: In(productsToDelete.map(p => p.id)) },
+        { softDeletedAt: new Date() },
+      );
+    }
+
+    const deletedIds = productsToDelete.map(p => p.id);
+    return {
+      deletedIds,
+      notFoundIds,
+      alreadyDeletedIds,
+    };
   }
 
   async findProductsPaginated(paginationDto: PaginationDto, filterDto: FilterDto): Promise<{ products: Product[]; total: number }> {
@@ -77,5 +100,65 @@ export class ProductsService {
     const [products, total] = await queryBuilder.getManyAndCount();
 
     return { products, total };
+  }
+
+  async countAllProducts(): Promise<number> {
+    return this.productsRepository.count();
+  }
+
+  async countDeletedProducts(): Promise<number> {
+    return this.productsRepository.count({
+      where: { softDeletedAt: Not(IsNull()) },
+    });
+  }
+
+  async getActiveProductsReport(filters: ReportActiveDto): Promise<{ percentageNonDeleted: number }> {
+    const queryBuilder = this.productsRepository.createQueryBuilder('product');
+
+    queryBuilder.where('product.softDeletedAt IS NULL');
+
+    if (filters.hasPrice !== undefined) {
+      if (filters.hasPrice === 'true') {
+        queryBuilder.andWhere('product.price IS NOT NULL');
+      } else if (filters.hasPrice === 'false') {
+        queryBuilder.andWhere('product.price IS NULL');
+      }
+    }
+
+    if (filters.from && filters.to) {
+      const fromDate = startOfDay(new Date(filters.from));
+      const toDate = endOfDay(new Date(filters.to));
+      queryBuilder.andWhere('product.updatedAt BETWEEN :fromDate AND :toDate', { fromDate, toDate });
+    }
+
+    const totalMatchingCount = await queryBuilder.getCount();
+    const totalProducts = await this.productsRepository.count();
+    const percentage = totalProducts > 0 ? (totalMatchingCount / totalProducts) * 100 : 0;
+
+    return {
+      percentageNonDeleted: percentage
+    };
+  }
+
+  async getDeletedPercentageByCategoryInDateRange(filters: ReportDeletedByCategoryDto): Promise<{ percentageDeleted: number }> {
+    const fromDate = new Date(`${filters.from}T00:00:00.000Z`);
+    const toDate = new Date(`${filters.to}T23:59:59.999Z`);
+
+    const totalCategoryProducts = await this.productsRepository.count({
+      where: { category: filters.category },
+    });
+
+    const deletedCount = await this.productsRepository.count({
+      where: {
+        category: filters.category,
+        softDeletedAt: Between(fromDate, toDate),
+      },
+    });
+
+    const percentage = totalCategoryProducts > 0 ? (deletedCount / totalCategoryProducts) * 100 : 0;
+
+    return {
+      percentageDeleted: percentage
+    };
   }
 }

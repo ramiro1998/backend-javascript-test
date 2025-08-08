@@ -37,6 +37,8 @@ export class ContentfulService implements OnModuleInit {
 
             const productsToProcess = entries.items.map((item: ContentfulProductEntry) => ({
                 id: item.sys.id,
+                createdAt: item.sys.createdAt,
+                updatedAt: item.sys.updatedAt,
                 ...item.fields,
                 price: item.fields.price ?? null,
             }));
