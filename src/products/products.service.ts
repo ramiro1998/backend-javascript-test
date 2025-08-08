@@ -5,7 +5,6 @@ import { Between, In, IsNull, Not, Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { FilterDto } from 'src/common/dto/filter.dto';
 import { ReportActiveDto } from 'src/admin/dto/report-active.dto';
-import { endOfDay, startOfDay } from 'date-fns';
 import { ReportDeletedByCategoryDto } from 'src/admin/dto/report-deleted-by-category.dto';
 
 @Injectable()
@@ -126,8 +125,9 @@ export class ProductsService {
     }
 
     if (filters.from && filters.to) {
-      const fromDate = startOfDay(new Date(filters.from));
-      const toDate = endOfDay(new Date(filters.to));
+      const fromDate = new Date(`${filters.from}T00:00:00.000Z`);
+      const toDate = new Date(`${filters.to}T23:59:59.999Z`);
+
       queryBuilder.andWhere('product.updatedAt BETWEEN :fromDate AND :toDate', { fromDate, toDate });
     }
 
