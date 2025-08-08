@@ -8,6 +8,8 @@ import { ProductsModule } from './products/products.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
+import { CronModule } from './cron/cron.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -17,10 +19,12 @@ import { CommonModule } from './common/common.module';
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfigService,
     }),
+    ScheduleModule.forRoot(),
     ProductsModule,
     AdminModule,
     AuthModule,
     CommonModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [AppService],
