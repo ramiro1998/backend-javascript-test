@@ -82,10 +82,10 @@ export class ProductsService {
     queryBuilder.where('product.softDeletedAt IS NULL');
 
     if (filterDto.name) {
-      queryBuilder.andWhere('product.name LIKE :name', { name: `%${filterDto.name}%` });
+      queryBuilder.andWhere('LOWER(product.name) LIKE :name', { name: `%${filterDto.name.toLowerCase()}%` });
     }
     if (filterDto.category) {
-      queryBuilder.andWhere('product.category = :category', { category: filterDto.category });
+      queryBuilder.andWhere('LOWER(product.category) = :category', { category: filterDto.category.toLowerCase() });
     }
     if (filterDto.minPrice) {
       queryBuilder.andWhere('product.price >= :minPrice', { minPrice: filterDto.minPrice });
