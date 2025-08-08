@@ -32,6 +32,6 @@ export class Product {
     @Column()
     stock: number;
 
-    @Column({ default: false })
-    active: boolean;
+    @Column({ type: 'timestamp', nullable: true })
+    softDeletedAt: Date;
 }

@@ -27,32 +27,24 @@ export class ContentfulService implements OnModuleInit {
         });
     }
 
-    async getProducts() {
+    async syncContentfulData(forceReactivate: boolean = false): Promise<void> {
+        const syncType = forceReactivate ? 'initial seed' : 'hourly sync';
         try {
-            this.logger.log('Fetching products from Contentful API...');
-            const contentType = this.configService.get<string>('CONTENTFUL_CONTENT_TYPE');
-
+            this.logger.log(`Executing ${syncType} from Contentful...`);
             const entries = await this.client.getEntries({
-                content_type: contentType,
+                content_type: this.configService.get<string>('CONTENTFUL_CONTENT_TYPE'),
             });
 
-            const productsToSave = entries.items.map((item: ContentfulProductEntry) => {
-                return {
-                    id: item.sys.id,
-                    ...item.fields,
-                    price: item.fields.price ?? 0,
-                    active: false,
-                };
-            });
+            const productsToProcess = entries.items.map((item: ContentfulProductEntry) => ({
+                id: item.sys.id,
+                ...item.fields,
+                price: item.fields.price ?? null,
+            }));
 
-            await this.productsService.saveProducts(productsToSave);
-
-            this.logger.log(`Successfully fetched and saved ${productsToSave.length} products.`);
-            return productsToSave;
-
+            await this.productsService.syncProducts(productsToProcess, forceReactivate);
+            this.logger.log(`${syncType} finished. ${productsToProcess.length} products processed.`);
         } catch (error) {
-            this.logger.error('Error fetching data from Contentful:', error.message);
-            return [];
+            this.logger.error(`Error during ${syncType}:`, error.message);
         }
     }
 }
