@@ -1,98 +1,170 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 Contentful Products API Challenge
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+![Node.js](https://img.shields.io/badge/Node.js-Active%20LTS-green)
+![NestJS](https://img.shields.io/badge/NestJS-Framework-red)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
+![Swagger](https://img.shields.io/badge/Swagger-API%20Docs-brightgreen)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📌 Description
 
-## Description
+This project is part of a **backend challenge** to test knowledge of API development and related technologies.  
+The API automatically fetches product data from **Contentful** every hour, stores it in a **PostgreSQL** database, and exposes both **public** and **private** endpoints for retrieving, filtering, and reporting data.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Key Features
 
-## Project setup
+- ⏳ **Scheduled data fetch**: every hour, the API requests the latest `Product` entries from Contentful.
+- 📦 **Persistent storage** using PostgreSQL and TypeORM.
+- 🔍 **Public endpoints** with pagination (max 5 items/page) and filtering by:
+  - Name
+  - Category
+  - Price range
+- 🗑 **Product deletion**: removed products will not reappear after restart.
+- 📊 **Private reports**:
+  1. Percentage of deleted products.
+  2. Percentage of non-deleted products with:
+     - Price / without price.
+     - Custom date range.
+  3. A custom report.
+- 🔐 **JWT-based authentication** for private endpoints.
+- 📜 **Swagger API documentation**.
+- 🐳 **Dockerized** for easy deployment.
 
-```bash
-$ npm install
+---
+
+## 🛠 Technologies Used
+
+- **Active LTS version of Node.js + NestJS**
+- **PostgreSQL**
+- **TypeORM**
+- **Swagger**
+- **Docker & Docker Compose**
+
+---
+
+## ⚙️ Environment Setup
+
+Before starting the application, create a `.env` file in the project root with the following variables:
+
+### Contentful API credentials
+
+```env
+CONTENTFUL_SPACE_ID=9xs1613l9f7v
+CONTENTFUL_ACCESS_TOKEN=I-ThsT55eE_B3sCUWEQyDT4VqVO3x__20ufuie9usns
+CONTENTFUL_ENVIRONMENT=master
+CONTENTFUL_CONTENT_TYPE=product
 ```
 
-## Compile and run the project
+## Database configuration (for Docker PostgreSQL)
 
-```bash
-# development
-$ npm run start
+### Database
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=super-password
+DB_DATABASE=products_challenge
 ```
 
-## Run tests
+### JWT Secret
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```env
+JWT_SECRET=super-secret
 ```
 
-## Deployment
+## 🐳 Running with Docker
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Once the .env file is created, start the containers with:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```env
+docker-compose up --build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+This will create:
 
-## Resources
+PostgreSQL container (official image)
 
-Check out a few resources that may come in handy when working with NestJS:
+Application container (NestJS backend)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+After the build, the API will be accessible at:
 
-## Support
+http://localhost:3000/api
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Swagger documentation:
 
-## Stay in touch
+```env
+http://localhost:3000/api/docs
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🌱 Seeding the Database
 
-## License
+To populate the database with initial data from Contentful:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Obtain a JWT token from the login endpoint:
+
+```env
+POST http://localhost:3000/api/auth/login
+```
+
+Body:
+
+```env
+{
+"secret": "secret-password"
+}
+```
+
+(The secret must match the JWT_SECRET in .env)
+
+Run the seed endpoint:
+
+```env
+POST http://localhost:3000/api/admin/seed
+```
+
+Add Authorization: Bearer <your-token> header.
+
+This will fetch and store all products from Contentful.
+
+## 🔒 Authentication
+
+Public module: No authentication required.
+
+Private module: Requires JWT in the Authorization header.
+
+Example:
+
+```env
+Authorization: Bearer <your-token>
+```
+
+## 📊 Reports
+
+Private endpoints include:
+
+Deleted products percentage
+
+Non-deleted products percentage (by price presence and custom date range)
+
+Custom report (implementation-specific)
+
+## 📄 API Documentation
+
+Swagger is available at:
+
+```env
+http://localhost:3000/api
+```
+
+## 💡 Assumptions and Design Decisions
+
+Soft Deletion: Instead of permanently removing products from the database, a softDeletedAt column is used. This approach allows for data preservation and accurate historical reporting on deleted items. Using a timestamp (Date) instead of a boolean (isDeleted) provides a more scalable and informative solution, as it records when an item was deleted, which is essential for audit trails and time-based reports.
+
+Custom Report: The chosen custom report calculates the percentage of deleted products by category and within a specified date range. This demonstrates the private module's ability to handle complex, filtered queries and provides valuable business insights that go beyond simple data retrieval.
+
+Public and Private Modules: The API is designed with a clear separation of concerns. The GET /products endpoint is public because it serves general product information to any user. All other sensitive actions, such as deleting products (DELETE /admin/products) and accessing detailed reports (GET /admin/reports), are protected within the private module and require JWT authentication. This ensures data integrity and security by restricting administrative actions to authorized users only.
+
+## 📜 License
+
+This project is for challenge purposes only.

@@ -141,21 +141,22 @@ export class ProductsService {
   }
 
   async getDeletedPercentageByCategoryInDateRange(filters: ReportDeletedByCategoryDto): Promise<{ percentageDeleted: number }> {
-    const fromDate = new Date(`${filters.from}T00:00:00.000Z`);
-    const toDate = new Date(`${filters.to}T23:59:59.999Z`);
+    const queryBuilder = this.productsRepository.createQueryBuilder('product');
 
-    const totalCategoryProducts = await this.productsRepository.count({
-      where: { category: filters.category },
-    });
+    if (filters.category) {
+      queryBuilder.andWhere('product.category = :category', { category: filters.category });
+    }
 
-    const deletedCount = await this.productsRepository.count({
-      where: {
-        category: filters.category,
-        softDeletedAt: Between(fromDate, toDate),
-      },
-    });
+    if (filters.from && filters.to) {
+      const fromDate = new Date(`${filters.from}T00:00:00.000Z`);
+      const toDate = new Date(`${filters.to}T23:59:59.999Z`);
+      queryBuilder.andWhere('product.softDeletedAt BETWEEN :from AND :to', { from: fromDate, to: toDate });
+    }
 
-    const percentage = totalCategoryProducts > 0 ? (deletedCount / totalCategoryProducts) * 100 : 0;
+    const totalProducts = await this.productsRepository.count();
+    const deletedProducts = await queryBuilder.andWhere('product.softDeletedAt IS NOT NULL').getCount();
+
+    const percentage = totalProducts > 0 ? (deletedProducts / totalProducts) * 100 : 0;
 
     return {
       percentageDeleted: percentage
