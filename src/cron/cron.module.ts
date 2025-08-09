@@ -3,12 +3,8 @@ import { CronService } from './cron.service';
 import { ProductsModule } from '../products/products.module';
 
 @Module({
-    imports: [
-        ProductsModule,
-    ],
-    providers: [
-        CronService,
-    ],
-    exports: []
+  imports: [ProductsModule],
+  providers: [CronService],
+  exports: [],
 })
-export class CronModule { }
+export class CronModule {}

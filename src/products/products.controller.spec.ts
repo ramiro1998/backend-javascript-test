@@ -4,7 +4,6 @@ import { ProductsService } from './products.service';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
-  let service: ProductsService;
 
   const mockProductsService = {
     findProductsPaginated: jest.fn(),
@@ -22,7 +21,6 @@ describe('ProductsController', () => {
     }).compile();
 
     controller = module.get<ProductsController>(ProductsController);
-    service = module.get<ProductsService>(ProductsService);
   });
 
   afterEach(() => {
@@ -44,8 +42,13 @@ describe('ProductsController', () => {
 
       const result = controller.findAll(paginationDto, filterDto);
 
-      expect(service.findProductsPaginated).toHaveBeenCalledWith(paginationDto, filterDto);
-      expect(service.findProductsPaginated).toHaveBeenCalledTimes(1);
+      expect(mockProductsService.findProductsPaginated).toHaveBeenCalledWith(
+        paginationDto,
+        filterDto,
+      );
+      expect(mockProductsService.findProductsPaginated).toHaveBeenCalledTimes(
+        1,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -58,7 +61,10 @@ describe('ProductsController', () => {
 
       const result = controller.findAll(paginationDto, filterDto);
 
-      expect(service.findProductsPaginated).toHaveBeenCalledWith(paginationDto, filterDto);
+      expect(mockProductsService.findProductsPaginated).toHaveBeenCalledWith(
+        paginationDto,
+        filterDto,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -76,7 +82,10 @@ describe('ProductsController', () => {
 
       const result = controller.findAll(paginationDto, filterDto);
 
-      expect(service.findProductsPaginated).toHaveBeenCalledWith(paginationDto, filterDto);
+      expect(mockProductsService.findProductsPaginated).toHaveBeenCalledWith(
+        paginationDto,
+        filterDto,
+      );
       expect(result).toEqual(expectedResult);
     });
 
@@ -89,7 +98,9 @@ describe('ProductsController', () => {
         maxPrice: 1000,
       };
       const expectedResult = {
-        data: [{ id: 3, name: 'Gaming Laptop', category: 'electronics', price: 800 }],
+        data: [
+          { id: 3, name: 'Gaming Laptop', category: 'electronics', price: 800 },
+        ],
         total: 1,
         page: 1,
         limit: 20,
@@ -99,7 +110,10 @@ describe('ProductsController', () => {
 
       const result = controller.findAll(paginationDto, filterDto);
 
-      expect(service.findProductsPaginated).toHaveBeenCalledWith(paginationDto, filterDto);
+      expect(mockProductsService.findProductsPaginated).toHaveBeenCalledWith(
+        paginationDto,
+        filterDto,
+      );
       expect(result).toEqual(expectedResult);
     });
 

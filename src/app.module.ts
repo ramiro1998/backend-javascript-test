@@ -23,6 +23,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     CommonModule,
     CronModule,
-  ]
+  ],
 })
-export class AppModule { }
+export class AppModule {}

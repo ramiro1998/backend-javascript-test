@@ -4,16 +4,14 @@ import { ContentfulService } from 'src/products/contentful/contentful.service';
 
 @Injectable()
 export class CronService {
-    private readonly logger = new Logger(CronService.name);
+  private readonly logger = new Logger(CronService.name);
 
-    constructor(
-        private readonly contentfulService: ContentfulService,
-    ) { }
+  constructor(private readonly contentfulService: ContentfulService) {}
 
-    @Cron('0 * * * *')
-    async handleCron() {
-        this.logger.log('Syncing products...');
-        await this.contentfulService.syncContentfulData();
-        this.logger.log('Products synchronized successfully.');
-    }
+  @Cron('0 * * * *')
+  async handleCron() {
+    this.logger.log('Syncing products...');
+    await this.contentfulService.syncContentfulData();
+    this.logger.log('Products synchronized successfully.');
+  }
 }

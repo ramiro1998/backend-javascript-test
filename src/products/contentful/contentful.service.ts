@@ -6,47 +6,63 @@ import { ContentfulProductEntry } from './interfaces/contentful.interface';
 
 @Injectable()
 export class ContentfulService implements OnModuleInit {
-    private readonly logger = new Logger(ContentfulService.name);
-    private client;
+  private readonly logger = new Logger(ContentfulService.name);
+  private client;
 
-    constructor(private configService: ConfigService, private productsService: ProductsService) { }
+  constructor(
+    private configService: ConfigService,
+    private productsService: ProductsService,
+  ) {}
 
-    onModuleInit() {
-        const space = this.configService.get<string>('CONTENTFUL_SPACE_ID');
-        const accessToken = this.configService.get<string>('CONTENTFUL_ACCESS_TOKEN');
-        const environment = this.configService.get<string>('CONTENTFUL_ENVIRONMENT');
+  onModuleInit() {
+    const space = this.configService.get<string>('CONTENTFUL_SPACE_ID');
+    const accessToken = this.configService.get<string>(
+      'CONTENTFUL_ACCESS_TOKEN',
+    );
+    const environment = this.configService.get<string>(
+      'CONTENTFUL_ENVIRONMENT',
+    );
 
-        if (!space || !accessToken || !environment) {
-            throw new Error('Contentful credentials are not set in the environment variables.');
-        }
-
-        this.client = createClient({
-            space: space,
-            accessToken: accessToken,
-            environment: environment,
-        });
+    if (!space || !accessToken || !environment) {
+      throw new Error(
+        'Contentful credentials are not set in the environment variables.',
+      );
     }
 
-    async syncContentfulData(forceReactivate: boolean = false): Promise<void> {
-        const syncType = forceReactivate ? 'initial seed' : 'hourly sync';
-        try {
-            this.logger.log(`Executing ${syncType} from Contentful...`);
-            const entries = await this.client.getEntries({
-                content_type: this.configService.get<string>('CONTENTFUL_CONTENT_TYPE'),
-            });
+    this.client = createClient({
+      space: space,
+      accessToken: accessToken,
+      environment: environment,
+    });
+  }
 
-            const productsToProcess = entries.items.map((item: ContentfulProductEntry) => ({
-                id: item.sys.id,
-                createdAt: item.sys.createdAt,
-                updatedAt: item.sys.updatedAt,
-                ...item.fields,
-                price: item.fields.price ?? null,
-            }));
+  async syncContentfulData(forceReactivate: boolean = false): Promise<void> {
+    const syncType = forceReactivate ? 'initial seed' : 'hourly sync';
+    try {
+      this.logger.log(`Executing ${syncType} from Contentful...`);
+      const entries = await this.client.getEntries({
+        content_type: this.configService.get<string>('CONTENTFUL_CONTENT_TYPE'),
+      });
 
-            await this.productsService.syncProducts(productsToProcess, forceReactivate);
-            this.logger.log(`${syncType} finished. ${productsToProcess.length} products processed.`);
-        } catch (error) {
-            this.logger.error(`Error during ${syncType}:`, error.message);
-        }
+      const productsToProcess = entries.items.map(
+        (item: ContentfulProductEntry) => ({
+          id: item.sys.id,
+          createdAt: item.sys.createdAt,
+          updatedAt: item.sys.updatedAt,
+          ...item.fields,
+          price: item.fields.price ?? null,
+        }),
+      );
+
+      await this.productsService.syncProducts(
+        productsToProcess,
+        forceReactivate,
+      );
+      this.logger.log(
+        `${syncType} finished. ${productsToProcess.length} products processed.`,
+      );
+    } catch (error) {
+      this.logger.error(`Error during ${syncType}:`, error.message);
     }
+  }
 }

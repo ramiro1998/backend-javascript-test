@@ -8,4 +8,4 @@ import { ProductsModule } from 'src/products/products.module';
   controllers: [AdminController],
   providers: [AdminService],
 })
-export class AdminModule { }
+export class AdminModule {}

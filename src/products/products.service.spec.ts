@@ -2,11 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
 describe('ProductsService', () => {
   let service: ProductsService;
-  let repository: jest.Mocked<Repository<Product>>;
+
+  let mockFind: jest.Mock;
+  let mockSave: jest.Mock;
+  let mockUpsert: jest.Mock;
+  let mockUpdate: jest.Mock;
+  let mockCount: jest.Mock;
+  let mockCreateQueryBuilder: jest.Mock;
 
   const mockProduct: Product = {
     id: '1',
@@ -25,20 +30,27 @@ describe('ProductsService', () => {
   };
 
   beforeEach(async () => {
+    mockFind = jest.fn();
+    mockSave = jest.fn();
+    mockUpsert = jest.fn();
+    mockUpdate = jest.fn();
+    mockCount = jest.fn();
+    mockCreateQueryBuilder = jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[mockProduct], 1]),
+      getCount: jest.fn().mockResolvedValue(1),
+    });
+
     const mockRepository = {
-      find: jest.fn(),
-      save: jest.fn(),
-      upsert: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
-      createQueryBuilder: jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        getManyAndCount: jest.fn().mockResolvedValue([[mockProduct], 1]),
-        getCount: jest.fn().mockResolvedValue(1),
-      }),
+      find: mockFind,
+      save: mockSave,
+      upsert: mockUpsert,
+      update: mockUpdate,
+      count: mockCount,
+      createQueryBuilder: mockCreateQueryBuilder,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -52,7 +64,6 @@ describe('ProductsService', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    repository = module.get(getRepositoryToken(Product));
   });
 
   afterEach(() => {
@@ -66,55 +77,60 @@ describe('ProductsService', () => {
   describe('syncProducts', () => {
     it('should sync products from external source', async () => {
       const externalProducts = [
-        { id: '1', name: 'Updated Product', category: 'Electronics', price: 120 },
+        {
+          id: '1',
+          name: 'Updated Product',
+          category: 'Electronics',
+          price: 120,
+        },
       ];
 
-      repository.find.mockResolvedValue([mockProduct]);
-      repository.upsert.mockResolvedValue(undefined as any);
+      mockFind.mockResolvedValue([mockProduct]);
+      mockUpsert.mockResolvedValue(undefined as any);
 
       await service.syncProducts(externalProducts);
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(repository.upsert).toHaveBeenCalledWith(
+      expect(mockFind).toHaveBeenCalled();
+      expect(mockUpsert).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             id: '1',
             name: 'Updated Product',
-            softDeletedAt: null
-          })
+            softDeletedAt: null,
+          }),
         ]),
-        ['id']
+        ['id'],
       );
     });
 
     it('should handle empty product list', async () => {
-      repository.find.mockResolvedValue([]);
+      mockFind.mockResolvedValue([]);
 
       await service.syncProducts([]);
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(repository.upsert).not.toHaveBeenCalled();
+      expect(mockFind).toHaveBeenCalled();
+      expect(mockUpsert).not.toHaveBeenCalled();
     });
   });
 
   describe('softDeleteMany', () => {
     it('should soft delete products by IDs', async () => {
       const idsToDelete = ['1'];
-      repository.find.mockResolvedValue([mockProduct]);
-      repository.update.mockResolvedValue(undefined as any);
+      mockFind.mockResolvedValue([mockProduct]);
+      mockUpdate.mockResolvedValue(undefined as any);
 
       const result = await service.softDeleteMany(idsToDelete);
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(repository.update).toHaveBeenCalledWith(
+      expect(mockFind).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ id: expect.anything() }),
-        expect.objectContaining({ softDeletedAt: expect.any(Date) })
+        expect.objectContaining({ softDeletedAt: expect.any(Date) }),
       );
       expect(result.deletedIds).toEqual(['1']);
     });
 
     it('should handle non-existent product IDs', async () => {
-      repository.find.mockResolvedValue([]);
+      mockFind.mockResolvedValue([]);
 
       const result = await service.softDeleteMany(['nonexistent']);
 
@@ -127,15 +143,15 @@ describe('ProductsService', () => {
     it('should return paginated products with default settings', async () => {
       const result = await service.findProductsPaginated({}, {});
 
-      expect(repository.createQueryBuilder).toHaveBeenCalled();
+      expect(mockCreateQueryBuilder).toHaveBeenCalled();
       expect(result).toEqual({
         products: [mockProduct],
-        total: 1
+        total: 1,
       });
     });
 
     it('should apply pagination parameters', async () => {
-      const queryBuilder = repository.createQueryBuilder();
+      const queryBuilder = mockCreateQueryBuilder();
 
       await service.findProductsPaginated({ page: 2, limit: 10 }, {});
 
@@ -144,51 +160,51 @@ describe('ProductsService', () => {
     });
 
     it('should apply name filter', async () => {
-      const queryBuilder = repository.createQueryBuilder();
+      const queryBuilder = mockCreateQueryBuilder();
 
       await service.findProductsPaginated({}, { name: 'Test' });
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'LOWER(product.name) LIKE :name',
-        { name: '%test%' }
+        { name: '%test%' },
       );
     });
 
     it('should apply category filter', async () => {
-      const queryBuilder = repository.createQueryBuilder();
+      const queryBuilder = mockCreateQueryBuilder();
 
       await service.findProductsPaginated({}, { category: 'Electronics' });
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'LOWER(product.category) = :category',
-        { category: 'electronics' }
+        { category: 'electronics' },
       );
     });
   });
 
   describe('countAllProducts', () => {
     it('should return total product count', async () => {
-      repository.count.mockResolvedValue(100);
+      mockCount.mockResolvedValue(100);
 
       const result = await service.countAllProducts();
 
-      expect(repository.count).toHaveBeenCalled();
+      expect(mockCount).toHaveBeenCalled();
       expect(result).toBe(100);
     });
   });
 
   describe('countDeletedProducts', () => {
     it('should return deleted product count', async () => {
-      repository.count.mockResolvedValue(25);
+      mockCount.mockResolvedValue(25);
 
       const result = await service.countDeletedProducts();
 
-      expect(repository.count).toHaveBeenCalledWith(
+      expect(mockCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            softDeletedAt: expect.anything()
-          })
-        })
+            softDeletedAt: expect.anything(),
+          }),
+        }),
       );
       expect(result).toBe(25);
     });
@@ -196,9 +212,9 @@ describe('ProductsService', () => {
 
   describe('getActiveProductsReport', () => {
     it('should return percentage of active products', async () => {
-      const queryBuilder: any = repository.createQueryBuilder();
+      const queryBuilder: any = mockCreateQueryBuilder();
       queryBuilder.getCount.mockResolvedValue(80);
-      repository.count.mockResolvedValue(100);
+      mockCount.mockResolvedValue(100);
 
       const result = await service.getActiveProductsReport({});
 
@@ -206,9 +222,9 @@ describe('ProductsService', () => {
     });
 
     it('should handle zero total products', async () => {
-      const queryBuilder: any = repository.createQueryBuilder();
+      const queryBuilder: any = mockCreateQueryBuilder();
       queryBuilder.getCount.mockResolvedValue(0);
-      repository.count.mockResolvedValue(0);
+      mockCount.mockResolvedValue(0);
 
       const result = await service.getActiveProductsReport({});
 
@@ -217,10 +233,11 @@ describe('ProductsService', () => {
   });
 
   describe('getDeletedPercentageByCategoryInDateRange', () => {
+
     it('should return percentage of deleted products by category', async () => {
-      repository.count
-        .mockResolvedValueOnce(100) // total in category
-        .mockResolvedValueOnce(20); // deleted in date range
+      mockCount.mockResolvedValueOnce(100);
+      const queryBuilder = mockCreateQueryBuilder();
+      queryBuilder.getCount.mockResolvedValueOnce(20);
 
       const result = await service.getDeletedPercentageByCategoryInDateRange({
         category: 'Electronics',
@@ -228,14 +245,11 @@ describe('ProductsService', () => {
         to: '2024-01-31',
       });
 
-      expect(repository.count).toHaveBeenCalledTimes(2);
       expect(result).toEqual({ percentageDeleted: 20 });
     });
 
     it('should handle zero category products', async () => {
-      repository.count
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(0);
+      mockCount.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
 
       const result = await service.getDeletedPercentageByCategoryInDateRange({
         category: 'NonExistent',

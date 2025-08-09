@@ -1,11 +1,13 @@
 import { JwtStrategy } from './jwt.strategy';
 
+class MockConfigService {
+  get = jest.fn();
+}
+
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
 
-  const mockConfigService = {
-    get: jest.fn(),
-  };
+  const mockConfigService = new MockConfigService();
 
   describe('constructor', () => {
     it('should create strategy with valid JWT_SECRET', () => {
@@ -45,7 +47,7 @@ describe('JwtStrategy', () => {
       jest.clearAllMocks();
     });
 
-    it('should return user object with userId and username', async () => {
+    it('should return user object with userId and username', () => {
       const payload = {
         sub: 'user123',
         username: 'testuser',
@@ -53,7 +55,7 @@ describe('JwtStrategy', () => {
         exp: 1234567890 + 3600,
       };
 
-      const result = await strategy.validate(payload);
+      const result = strategy.validate(payload as any);
 
       expect(result).toEqual({
         userId: 'user123',
@@ -61,7 +63,7 @@ describe('JwtStrategy', () => {
       });
     });
 
-    it('should handle payload with additional fields', async () => {
+    it('should handle payload with additional fields', () => {
       const payload = {
         sub: 'user456',
         username: 'anotheruser',
@@ -71,7 +73,7 @@ describe('JwtStrategy', () => {
         exp: 1234567890 + 3600,
       };
 
-      const result = await strategy.validate(payload);
+      const result = strategy.validate(payload as any);
 
       expect(result).toEqual({
         userId: 'user456',
@@ -79,13 +81,13 @@ describe('JwtStrategy', () => {
       });
     });
 
-    it('should handle payload with missing optional fields', async () => {
+    it('should handle payload with missing optional fields', () => {
       const payload = {
         sub: 'user789',
         username: 'minimaluser',
       };
 
-      const result = await strategy.validate(payload);
+      const result = strategy.validate(payload as any);
 
       expect(result).toEqual({
         userId: 'user789',

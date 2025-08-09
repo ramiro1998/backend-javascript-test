@@ -7,9 +7,9 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
-  async login(secret: string): Promise<string> {
+  login(secret: string) {
     const adminSecret = this.configService.get<string>('JWT_SECRET');
 
     if (secret !== adminSecret) {

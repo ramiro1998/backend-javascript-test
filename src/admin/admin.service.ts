@@ -5,23 +5,22 @@ import { ReportDeletedByCategoryDto } from './dto/report-deleted-by-category.dto
 
 @Injectable()
 export class AdminService {
-
-  constructor(private productsService: ProductsService) { }
+  constructor(private productsService: ProductsService) {}
 
   async getDeletedProductsPercentage() {
     const totalProducts = await this.productsService.countAllProducts();
     const deletedProducts = await this.productsService.countDeletedProducts();
     const percentageDeleted = (deletedProducts / totalProducts) * 100;
-    return { percentageDeleted }
+    return { percentageDeleted };
   }
 
   async getActiveProductsReport(filters: ReportActiveDto) {
-    return this.productsService.getActiveProductsReport(filters)
+    return this.productsService.getActiveProductsReport(filters);
   }
-
 
   async getDeletedPercentageByCategory(filters: ReportDeletedByCategoryDto) {
-    return this.productsService.getDeletedPercentageByCategoryInDateRange(filters)
+    return this.productsService.getDeletedPercentageByCategoryInDateRange(
+      filters,
+    );
   }
-
 }
