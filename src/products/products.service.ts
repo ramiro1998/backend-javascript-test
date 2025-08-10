@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Not, Repository } from 'typeorm';
@@ -14,7 +18,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productsRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async syncProducts(
     productsFromContentful: Partial<Product>[],
@@ -23,7 +27,9 @@ export class ProductsService {
     try {
       const contentfulIds = productsFromContentful.map((p) => p.id);
       const existingProducts = await this.productsRepository.find();
-      const existingProductsMap = new Map(existingProducts.map((p) => [p.id, p]));
+      const existingProductsMap = new Map(
+        existingProducts.map((p) => [p.id, p]),
+      );
 
       const productsWithIds = productsFromContentful.filter((p) => p.id);
 
@@ -94,7 +100,8 @@ export class ProductsService {
       const { page = 1, limit = 5 } = paginationDto;
       const skip = (page - 1) * limit;
 
-      const queryBuilder = this.productsRepository.createQueryBuilder('product');
+      const queryBuilder =
+        this.productsRepository.createQueryBuilder('product');
       queryBuilder.where('product.softDeletedAt IS NULL');
 
       if (filterDto.name) {
@@ -151,7 +158,8 @@ export class ProductsService {
     filters: ReportActiveDto,
   ): Promise<{ percentageNonDeleted: number }> {
     try {
-      const queryBuilder = this.productsRepository.createQueryBuilder('product');
+      const queryBuilder =
+        this.productsRepository.createQueryBuilder('product');
       queryBuilder.where('product.softDeletedAt IS NULL');
 
       if (filters.hasPrice !== undefined) {
@@ -190,7 +198,8 @@ export class ProductsService {
     filters: ReportDeletedByCategoryDto,
   ): Promise<{ percentageDeleted: number }> {
     try {
-      const queryBuilder = this.productsRepository.createQueryBuilder('product');
+      const queryBuilder =
+        this.productsRepository.createQueryBuilder('product');
 
       if (filters.category) {
         queryBuilder.andWhere('product.category = :category', {

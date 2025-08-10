@@ -7,21 +7,16 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   login(secret: string) {
-    try {
-      const adminSecret = this.configService.get<string>('JWT_SECRET');
+    const adminSecret = this.configService.get<string>('JWT_SECRET');
 
-      if (secret !== adminSecret) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      const payload = { username: 'admin' };
-      return this.jwtService.sign(payload);
-
-    } catch (error) {
-      throw error;
+    if (secret !== adminSecret) {
+      throw new UnauthorizedException('Invalid credentials');
     }
+
+    const payload = { username: 'admin' };
+    return this.jwtService.sign(payload);
   }
 }

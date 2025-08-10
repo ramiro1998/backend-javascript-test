@@ -233,7 +233,6 @@ describe('ProductsService', () => {
   });
 
   describe('getDeletedPercentageByCategoryInDateRange', () => {
-
     it('should return percentage of deleted products by category', async () => {
       mockCount.mockResolvedValueOnce(100);
       const queryBuilder = mockCreateQueryBuilder();
