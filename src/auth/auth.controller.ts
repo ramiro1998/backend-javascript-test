@@ -5,7 +5,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   @ApiOperation({ summary: 'Login to get token for authorization' })
@@ -22,6 +22,7 @@ export class AuthController {
       },
     },
   })
+
   login(@Body() { secret }: { secret: string }) {
     const token = this.authService.login(secret);
     if (!token) {
